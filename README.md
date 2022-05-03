@@ -1,3 +1,2 @@
 # algorithm
-算法笔记
-This is my notes of 《剑指offer》
+剑指offer.md: leetcode 《剑指offer》刷题笔记
