@@ -3938,3 +3938,453 @@ public:
 };
 ```
 
+19 请实现一个函数用来匹配包含'. '和'*'的正则表达式。模式中的字符'.'表示任意一个字符，而'*'表示它前面的字符可以出现任意次（含0次）。在本题中，匹配是指字符串的所有字符匹配整个模式。例如，字符串"aaa"与模式"a.a"和"ab*ac*a"匹配，但与"aa.a"和"ab*a"均不匹配。
+
+示例 1:
+
+输入:
+s = "aa"
+p = "a"
+输出: false
+解释: "a" 无法匹配 "aa" 整个字符串。
+示例 2:
+
+输入:
+s = "aa"
+p = "a*"
+输出: true
+解释: 因为 '*' 代表可以匹配零个或多个前面的那一个元素, 在这里前面的元素就是 'a'。因此，字符串 "aa" 可被视为 'a' 重复了一次。
+示例 3:
+
+输入:
+s = "ab"
+p = ".*"
+输出: true
+解释: ".*" 表示可匹配零个或多个（'*'）任意字符（'.'）。
+示例 4:
+
+输入:
+s = "aab"
+p = "c*a*b"
+输出: true
+解释: 因为 '*' 表示零个或多个，这里 'c' 为 0 个, 'a' 被重复一次。因此可以匹配字符串 "aab"。
+示例 5:
+
+输入:
+s = "mississippi"
+p = "mis*is*p*."
+输出: false
+s 可能为空，且只包含从 a-z 的小写字母。
+p 可能为空，且只包含从 a-z 的小写字母以及字符 . 和 *，无连续的 '*'。
+注意：本题与主站 10 题相同：https://leetcode-cn.com
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/zheng-ze-biao-da-shi-pi-pei-lcof
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+```c++
+class Solution {
+public:
+    bool isMatch(string s, string p) {
+        int m = s.size();
+        int n = p.size();
+
+        auto matches = [&](int i, int j) {
+            if (i == 0) {
+                return false;
+            }
+            if (p[j - 1] == '.') {
+                return true;
+            }
+            return s[i - 1] == p[j - 1];
+        };
+
+        vector<vector<int>> f(m + 1, vector<int>(n + 1));
+        f[0][0] = true;
+        for (int i = 0; i <= m; ++i) {
+            for (int j = 1; j <= n; ++j) {
+                if (p[j - 1] == '*') {
+                    f[i][j] |= f[i][j - 2];
+                    if (matches(i, j - 1)) {
+                        f[i][j] |= f[i - 1][j];
+                    }
+                }
+                else {
+                    if (matches(i, j)) {
+                        f[i][j] |= f[i - 1][j - 1];
+                    }
+                }
+            }
+        }
+        return f[m][n];
+    }
+};
+
+
+```
+
+49 我们把只包含质因子 2、3 和 5 的数称作丑数（Ugly Number）。求按从小到大的顺序的第 n 个丑数。
+
+ 
+
+示例:
+
+输入: n = 10
+输出: 12
+解释: 1, 2, 3, 4, 5, 6, 8, 9, 10, 12 是前 10 个丑数。
+说明:  
+
+1 是丑数。
+n 不超过1690。
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/chou-shu-lcof
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+```c++
+class Solution {
+public:
+    int nthUglyNumber(int n) {
+        int a = 0, b = 0, c = 0;
+        int dp[n];
+        dp[0] = 1;
+        for(int i = 1; i < n; i++) {
+            int n2 = dp[a] * 2, n3 = dp[b] * 3, n5 = dp[c] * 5;
+            dp[i] = min(min(n2, n3), n5);
+            if(dp[i] == n2) a++;
+            if(dp[i] == n3) b++;
+            if(dp[i] == n5) c++;
+        }
+        return dp[n - 1];
+    }
+};
+
+
+```
+
+60 把n个骰子扔在地上，所有骰子朝上一面的点数之和为s。输入n，打印出s的所有可能的值出现的概率。
+
+ 
+
+你需要用一个浮点数数组返回答案，其中第 i 个元素代表这 n 个骰子所能掷出的点数集合中第 i 小的那个的概率。
+
+ 
+
+示例 1:
+
+输入: 1
+输出: [0.16667,0.16667,0.16667,0.16667,0.16667,0.16667]
+示例 2:
+
+输入: 2
+输出: [0.02778,0.05556,0.08333,0.11111,0.13889,0.16667,0.13889,0.11111,0.08333,0.05556,0.02778]
+
+
+限制：
+
+1 <= n <= 11
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/nge-tou-zi-de-dian-shu-lcof
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+```c++
+class Solution {
+public:
+    vector<double> dicesProbability(int n) {
+        // 假设前i个色子的点数和为j，加入第i + 1个色子，其点数和可能为j + 1, j + 2,..., j + 6
+        // 用dp[i][j]表示i个色子点数和为j的可能数
+        // dp[i][j] = sum(dp[i - 1][j - 1], dp[i - 1][j - 2], dp[i - 1][j - 3], dp[i - 1][j - 4], dp[i - 1][j - 5], dp[i - 1][j - 6])
+        vector<vector<int>> dp(n + 1, vector<int>(6 * (n + 1), 0));
+        for(int i = 1; i <= 6; ++i)
+            dp[1][i] = 1;
+        for(int i = 2; i <= n; ++i)
+            for(int j = i; j <= 6 * i; ++j)
+                for(int k = 1; k <= 6; ++k)
+                    if(j - k <= 0) break;
+                    else dp[i][j] += dp[i - 1][j - k];
+        int total = pow(6, n);
+        vector<double> res;
+        for(int i = n; i <= 6 * n; ++i){
+            res.push_back((double)dp[n][i] / total);
+        }
+        return res;
+    }
+};
+```
+
+17 输入数字 n，按顺序打印出从 1 到最大的 n 位十进制数。比如输入 3，则打印出 1、2、3 一直到最大的 3 位数 999。
+
+示例 1:
+
+输入: n = 1
+输出: [1,2,3,4,5,6,7,8,9]
+
+
+说明：
+
+用返回一个整数列表来代替打印
+n 为正整数
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/da-yin-cong-1dao-zui-da-de-nwei-shu-lcof
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+```c++
+class Solution {
+public:
+    vector<int> printNumbers(int n) {
+        //10^n
+        // 溢出怎么办？
+        vector<int> res(pow(10, n) - 1, 0);
+        for(int i = 0; i < res.size(); ++i)
+            res[i] = i + 1;
+        return res;
+    }
+};
+```
+
+51 在数组中的两个数字，如果前面一个数字大于后面的数字，则这两个数字组成一个逆序对。输入一个数组，求出这个数组中的逆序对的总数。
+
+ 
+
+示例 1:
+
+输入: [7,5,6,4]
+输出: 5
+
+
+限制：
+
+0 <= 数组长度 <= 50000
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/shu-zu-zhong-de-ni-xu-dui-lcof
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+```c++
+//暴力法超时
+class Solution {
+public:
+    vector<int> tmp;
+    int merge_sort(vector<int>& nums, int l, int r)
+    {
+        if (l >= r)
+            return 0;
+        int mid = l + r >> 1;
+        int res = merge_sort(nums, l, mid) + merge_sort(nums, mid + 1, r);
+        int i = l, j = mid + 1, k = 0;
+        while (i <= mid && j <= r)
+        {
+            if (nums[i] <= nums[j])
+                tmp[k ++ ] = nums[i ++ ];
+            else
+            {
+                res += mid - i + 1;    // 统计逆序对的数量
+                tmp[k ++ ] = nums[j ++ ];
+            }
+        }
+        while (i <= mid)
+            tmp[k ++ ] = nums[i ++ ];
+        while (j <= r)
+            tmp[k ++ ] = nums[j ++ ];
+        for (int i = l, j = 0; i <= r; i ++ , j ++ )
+            nums[i] = tmp[j];
+        return res;
+    }
+    int reversePairs(vector<int>& nums) {
+        int n = nums.size();
+        tmp.resize(n);
+        return merge_sort(nums, 0, n - 1);
+    }
+};
+
+```
+
+14 给你一根长度为 n 的绳子，请把绳子剪成整数长度的 m 段（m、n都是整数，n>1并且m>1），每段绳子的长度记为 k[0],k[1]...k[m - 1] 。请问 k[0]*k[1]*...*k[m - 1] 可能的最大乘积是多少？例如，当绳子的长度是8时，我们把它剪成长度分别为2、3、3的三段，此时得到的最大乘积是18。
+
+答案需要取模 1e9+7（1000000007），如计算初始结果为：1000000008，请返回 1。
+
+ 
+
+示例 1：
+
+输入: 2
+输出: 1
+解释: 2 = 1 + 1, 1 × 1 = 1
+示例 2:
+
+输入: 10
+输出: 36
+解释: 10 = 3 + 3 + 4, 3 × 3 × 4 = 36
+
+
+提示：
+
+2 <= n <= 1000
+注意：本题与主站 343 题相同：https://leetcode-cn.com/problems/integer-break/
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/jian-sheng-zi-ii-lcof
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+```c++
+//别人的题解，暂未看懂
+class Solution {
+    public:
+    int cuttingRope(int n) {
+        if(n < 4){
+            return n - 1;
+        }else if(n == 4){
+            return n;
+        }
+        long res = 1;
+        while(n > 4){
+            res *= 3;
+            res %= 1000000007;
+            n -= 3;//将绳子已长度e等分是乘积最大，但是智能取整，3能达到最大
+        }
+        return (int) (res * n % 1000000007);
+    }
+};
+
+```
+
+43 输入一个整数 n ，求1～n这n个整数的十进制表示中1出现的次数。
+
+例如，输入12，1～12这些整数中包含1 的数字有1、10、11和12，1一共出现了5次。
+
+ 
+
+示例 1：
+
+输入：n = 12
+输出：5
+示例 2：
+
+输入：n = 13
+输出：6
+
+
+限制：
+
+1 <= n < 2^31
+注意：本题与主站 233 题相同：https://leetcode-cn.com/problems/number-of-digit-one/
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+```c++
+class Solution {
+public:
+    int countDigitOne(int n) {
+        //统计每一个整数中 1出现的次数
+        // 超时
+        // 从1 - 9，1出现了1次
+        // 从10 - 19 1出现了11次
+        // 从20 - 99 1出现了8次
+        // 100 以内出现了20次
+        // 1000以内出现了 100 + 10 * 20次
+        // 从最高位开始算，假设共有m位, 左数第一位为 10^m 位，假设数字是i，截至 n为止，这一位上n最少出现了：
+        // i > 1, 这一位出现了10^m次
+        // i = 1, 这一位出现了它之后的数字的次数
+        // i = 0, 这一位没有出现过1
+        // 每一位上出现的次数，假设当前位位i，对i来说，如果i就是最高位，那么上面的判断是符合的
+        // 如果i不是最高位，那么其左边每加1，i位出现的次数都要加一份
+        int cur = n % 10; // 当前位的数字
+        long digit = 1;
+        int left = n / 10; // 当前位的左边
+        int right = 0; // 当前位的右边
+        int res = 0;
+        // 123011
+        while(cur != 0 || left != 0){
+            //当前位的数字
+            if(cur == 0) res += left * digit;
+            else if(cur == 1) res += left * digit + right + 1;
+            else res += (left + 1 ) * digit;
+            right += cur * digit;
+            cur = left % 10;
+            left /= 10;
+            digit *= 10;
+
+        }
+        return res;
+    }
+};
+```
+
+44 数字以0123456789101112131415…的格式序列化到一个字符序列中。在这个序列中，第5位（从下标0开始计数）是5，第13位是1，第19位是4，等等。
+
+请写一个函数，求任意第n位对应的数字。
+
+ 
+
+示例 1：
+
+输入：n = 3
+输出：3
+示例 2：
+
+输入：n = 11
+输出：0
+
+
+限制：
+
+0 <= n < 2^31
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/shu-zi-xu-lie-zhong-mou-yi-wei-de-shu-zi-lcof
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+```c++
+class Solution {
+public:
+    int findNthDigit(int n) {
+        /*
+        0-9 10个一位数 占了前10位
+
+        10-99 90个两位数 占了180位
+
+        100-999 900个三位数 占了2700位
+
+        以找序列的第1001位是什么为例，
+
+        1001>10显然第1001位在这10个数字之后，所以1001-10=991，从这10个数字之后的序列中寻找第991位，又因为991>180，所以再跳过90个两位数，继续从两位数之后的序列中寻找第991-180=811位。因为811<2700，所以第811位是某个三位数中的一位，811/3=270余1，所以第811位是从100开始的第270个数字即370的中间一位，也就是7.
+                */
+        // 当前位数，比如1-9是1位，10-99是两位，100-999是三位
+        int digit = 1;
+        // 确定当前位数的起始数字
+        long long start = 1;
+        // 当前位数的数字有多少位数字，比如位数为1，则数字有9位，123456789
+        // 位数为2，则数字有90位，101112……99，共有9 * 10 * 2 = 180位
+        long long cnt = 9; 
+        // 做题思路：
+        // 1. 确定n所在的位数
+        // 2. 确定n所在的数字
+        // 3. 确定n所在位的数字 
+        while (n > cnt) {
+            n -= cnt;
+            // 位数不断累加
+            ++digit;
+            // 开始的数字为1，10，100……以此类推
+            start *= 10;
+            // 位数的计算公式：当前位数数字的数量和乘位数，比如2位数，有90个数，90*2=180
+            cnt = 9 * start * digit;
+        }
+        // 现在n <= cnt，根据计算的位数来确认当前的数字，对digit整除得到是当前位的第几个数字
+        // n是一个大于0的数，而找数字要从第零个开始找，因此对n做-1处理
+        // 比如最开始n = 10，减去9后变成了1，这意味着n是2位数的第一个数字，即10 + (1 - 1) = 10
+        n--;
+        int num = start + n / digit;
+        // 现在确定最后的答案，所有的数字的按照位数进行循环，n对位数求余就是它在自己的数字的位置
+        // 比如最开始n = 10，根据上述规则得到了num = 10，（n - 1）%2==0，所以是1，也就是10里面第零个位置的数字
+        int ans = to_string(num)[n % digit] - '0';
+        return ans;
+    }
+};
+
+
+```
+
